@@ -1,0 +1,57 @@
+package com.dp.persistence.util;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+
+import com.dp.persistence.domain.EquipmentStatus;
+import com.dp.persistence.vo.EquipmentVO;
+
+public class XMLUtils {
+	
+	public static List<EquipmentVO> parseEquipmentList(String source) throws DocumentException {
+		
+		List<EquipmentVO> equipments = new ArrayList<EquipmentVO>();
+		Document document = DocumentHelper.parseText(source);
+		Element root = document.getRootElement();
+
+        for ( Iterator i = root.elementIterator(); i.hasNext(); ) {
+        	
+        	EquipmentVO equipmentVO = new EquipmentVO();
+            Element equipmentE = (Element) i.next();
+            String equipmentName = equipmentE.elementText("name");  //name为设备标识
+            equipmentVO.setName(equipmentName);
+            
+            //根据设备不同类型，持久化到不同表
+            //String equipmentType = equipmentE.elementText("type");  //type为设备类型
+            Element paramsE = equipmentE.element("params");
+            List<EquipmentStatus> params = new ArrayList<EquipmentStatus>();
+            
+    		for ( Iterator j = paramsE.elementIterator(); j.hasNext(); ) {
+    			Element paramE = (Element) j.next();
+    			String paramName = paramE.elementText("name");
+    			String paramValue = paramE.elementText("value");
+    			
+    			EquipmentStatus equipmentStatus = new EquipmentStatus();
+    			equipmentStatus.setParam(paramName);
+    			equipmentStatus.setValue(paramValue);
+    			equipmentStatus.setRecordTime(new Date());
+    			
+    			params.add(equipmentStatus);
+    		}
+            
+            equipmentVO.setList(params);
+            equipments.add(equipmentVO);
+        }
+		
+		return equipments;
+		
+	}
+	
+}

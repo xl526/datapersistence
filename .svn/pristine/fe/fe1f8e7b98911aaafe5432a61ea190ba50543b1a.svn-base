@@ -1,0 +1,60 @@
+package com.dp.persistence.util;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+
+import com.dp.persistence.domain.EquipmentStatus;
+import com.dp.persistence.vo.EquipmentVO;
+
+public class XMLUtils {
+	
+	public static List<EquipmentVO> parseEquipmentList(String source) throws DocumentException {
+		
+		List<EquipmentVO> equipments = new ArrayList<EquipmentVO>();
+		Document document = DocumentHelper.parseText(source);
+		Element root = document.getRootElement();
+
+        for ( Iterator i = root.elementIterator(); i.hasNext(); ) {
+        	
+        	EquipmentVO equipmentVO = new EquipmentVO();
+            Element equipmentE = (Element) i.next();
+            String equipmentName = equipmentE.elementText("name");  //name为设备标识
+            equipmentVO.setName(equipmentName);
+            
+            List<EquipmentStatus> params = new ArrayList<EquipmentStatus>();
+            Element paramsE = equipmentE.element("params");
+            
+            for ( Iterator j = paramsE.elementIterator(); j.hasNext(); ) {
+            	
+            	EquipmentStatus equipmentStatus = new EquipmentStatus();
+            	Element paramE = (Element) j.next();
+            	String paramName = paramE.elementText("name");
+            	String paramValue = paramE.elementText("value");
+            	
+            	equipmentStatus.setParam(paramName);
+            	equipmentStatus.setValue(paramValue);
+            	equipmentStatus.setRecordTime(new Date());
+            	
+            	params.add(equipmentStatus);
+            }
+            
+            equipmentVO.setList(params);
+            equipments.add(equipmentVO);
+        }
+		
+		return equipments;
+		
+	}
+	
+	public static void main(String[] args) throws DocumentException {
+		String str = "<equipments><equipment><name>opt14</name><params><param><name>usage</name><value>0</value></param></params></equipment></equipments>";
+		parseEquipmentList(str);
+	}
+}
